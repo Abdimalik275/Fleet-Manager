@@ -1,61 +1,60 @@
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const connectDB = require("./config/db");
+// server.js
 require("dotenv").config();
-const helmet = require("helmet");
-
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 
 const app = express();
 
-// Security headers
-app.use(helmet());
+// ==============================
+// CORS Configuration
+// ==============================
+app.use(cors({
+  origin: process.env.FRONTEND_URL, // http://localhost:3000 or your deployed frontend
+  credentials: true,                // allow cookies if needed
+}));
 
-// Trust proxy (important for secure cookies behind Render/other proxies)
-app.set("trust proxy", 1);
-
-// Connect database
-connectDB();
-
-// Body parsing
+// ==============================
+// Body Parser
+// ==============================
 app.use(express.json());
-app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
 
-// CORS: allow only your frontend
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL, // e.g., https://fleet-frontend.onrender.com
-    credentials: true,                // allow cookies/authorization headers if needed
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
+// ==============================
 // Routes
+// ==============================
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
-// Health check
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", uptime: process.uptime() });
-});
+// ==============================
+// MongoDB Connection
+// ==============================
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGO_URI) {
+      throw new Error("MONGO_URI is not defined in environment variables");
+    }
 
-// Root
-app.get("/", (req, res) => {
-  res.json({ message: "Fleet Management API running" });
-});
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
-// Centralized error handler (optional but recommended)
-app.use((err, req, res, next) => {
-  console.error("Unhandled Error:", err);
-  const status = err.status || 500;
-  res.status(status).json({ message: err.message || "Internal server error" });
-});
+    console.log("✅ Database connected successfully");
+  } catch (err) {
+    console.error("❌ Database Connection Failed:", err.message);
+    process.exit(1); // Stop the server if DB fails
+  }
+};
 
-// Start server
+// ==============================
+// Start Server
+// ==============================
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  await connectDB();
 });
