@@ -1,60 +1,61 @@
-// server.js
-require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const connectDB = require("./config/db");
+require("dotenv").config();
+const helmet = require("helmet");
+
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 
 const app = express();
 
-// ==============================
-// CORS Configuration
-// ==============================
-app.use(cors({
-  origin: process.env.FRONTEND_URL, // http://localhost:3000 or your deployed frontend
-  credentials: true,                // allow cookies if needed
-}));
+// Security headers
+app.use(helmet());
 
-// ==============================
-// Body Parser
-// ==============================
+// Trust proxy (important for secure cookies behind Render/other proxies)
+app.set("trust proxy", 1);
+
+// Connect database
+connectDB();
+
+// Body parsing
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// ==============================
+// CORS: allow only your frontend
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL, // http://localhost:3000 or your deployed frontend
+    credentials: true,                // allow cookies/authorization headers if needed
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 // Routes
-// ==============================
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
-// ==============================
-// MongoDB Connection
-// ==============================
-const connectDB = async () => {
-  try {
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is not defined in environment variables");
-    }
+// Health check
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
 
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+// Root
+app.get("/", (req, res) => {
+  res.json({ message: "Fleet Management API running" });
+});
 
-    console.log("✅ Database connected successfully");
-  } catch (err) {
-    console.error("❌ Database Connection Failed:", err.message);
-    process.exit(1); // Stop the server if DB fails
-  }
-};
+// Centralized error handler (optional but recommended)
+app.use((err, req, res, next) => {
+  console.error("Unhandled Error:", err);
+  const status = err.status || 500;
+  res.status(status).json({ message: err.message || "Internal server error" });
+});
 
-// ==============================
-// Start Server
-// ==============================
+// Start server
 const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  await connectDB();
 });
