@@ -24,15 +24,15 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS configuration
-const corsOptions = {
-  origin: process.env.FRONTEND_URL, // http://localhost:3000
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-};
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
-app.use(cors(corsOptions));
-// app.options("*", cors(corsOptions));
+
 
 // Routes
 app.use("/api/auth", authRoutes);
