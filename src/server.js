@@ -23,15 +23,16 @@ connectDB();
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS: allow only your frontend
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL, // http://localhost:3000 or your deployed frontend
-    credentials: true,                // allow cookies/authorization headers if needed
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// CORS configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL, // http://localhost:3000
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+// app.options("*", cors(corsOptions));
 
 // Routes
 app.use("/api/auth", authRoutes);
