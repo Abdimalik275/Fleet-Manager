@@ -1,29 +1,34 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const connectDB = require("./config/db");
-require("dotenv").config();
 const helmet = require("helmet");
+require("dotenv").config();
 
+const connectDB = require("./config/db");
+
+// Routes
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
+const truckRoutes = require("./routes/truck.routes");
+const driverRoutes = require("./routes/driver.routes");
 
 const app = express();
+
+/* =======================
+   SECURITY & GLOBAL MIDDLEWARE
+======================= */
 
 // Security headers
 app.use(helmet());
 
-// Trust proxy (important for secure cookies behind Render/other proxies)
+// Trust proxy (important for cookies behind proxies like Render)
 app.set("trust proxy", 1);
-
-// Connect database
-connectDB();
 
 // Body parsing
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS configuration
+// CORS
 app.use(
   cors({
     origin: ["http://localhost:3000"],
@@ -32,31 +37,50 @@ app.use(
   })
 );
 
+/* =======================
+   DATABASE CONNECTION
+======================= */
+connectDB();
 
-
-// Routes
+/* =======================
+   ROUTES
+======================= */
 app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/drivers", driverRoutes);
+app.use("/api/trucks", truckRoutes);
 
-// Health check
+/* =======================
+   HEALTH & ROOT
+======================= */
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", uptime: process.uptime() });
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date(),
+  });
 });
 
-// Root
 app.get("/", (req, res) => {
-  res.json({ message: "Fleet Management API running" });
+  res.json({ message: "🚀 Fleet Management API running" });
 });
 
-// Centralized error handler (optional but recommended)
+/* =======================
+   GLOBAL ERROR HANDLER
+======================= */
 app.use((err, req, res, next) => {
   console.error("Unhandled Error:", err);
-  const status = err.status || 500;
-  res.status(status).json({ message: err.message || "Internal server error" });
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
 });
 
-// Start server
+/* =======================
+   START SERVER
+======================= */
 const PORT = process.env.PORT || 4000;
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
