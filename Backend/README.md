@@ -1,136 +1,91 @@
-<<<<<<< HEAD
-"# Fleet-Manager" 
-gamoilTradingLimited
-=======
 
 
-# Fleet Management System API Documentation
+# Fleet Management System (Backend) – Overview
 
-This document provides details on **authentication and user management API endpoints** for the Fleet Management System backend (Node.js, Express, MongoDB). It is intended for frontend developers to integrate securely with the backend services.
+This backend system manages trucks, drivers, and driver-to-truck assignments. It is built with **Node.js, Express, and MongoDB** and designed with **enterprise best practices** including modular architecture, role-based access control, audit tracking, and data integrity.
 
 ---
 
-## **Base URL**
+## **1. Data Modeling**
 
-```
-http://<your-backend-domain>/api
-```
+You defined two main entities: **Truck** and **Driver**.
 
----
+* **Truck model** includes key fields such as `plateNumber`, `model`, `capacity`, `status`, and an array of `assignedDrivers`. It tracks the lifecycle of a truck and links it to multiple drivers, supporting scenarios like co-drivers or shifts. It also has audit fields (`createdBy`, `updatedBy`) to maintain accountability on who creates or modifies truck records.
 
-## **Authentication Endpoints**
+* **Driver model** stores driver-specific information such as `name`, `phone`, `licenseNumber`, and `salaryType`. Drivers also have a `status` field to indicate availability and a list of `assignedTrucks` to represent a many-to-many relationship with trucks. Similarly, audit fields track who performed modifications.
 
-### **1. Bootstrap Super Admin (One-time Setup)**
-
-**POST** `/auth/bootstrap-super-admin`
-
-* Creates the initial Super Admin account.
-* Should only be used once during system setup.
-* Requires a `bootstrapKey`.
-* Returns success message with created Super Admin ID.
-* Errors: Invalid bootstrap key, Super Admin already exists.
+These schemas enforce **data integrity** (unique license numbers for drivers, unique plate numbers for trucks) and implement **business rules** through enumerations for status fields.
 
 ---
 
-### **2. Login**
+## **2. Controllers**
 
-**POST** `/auth/login`
+The **TruckController** and **DriverController** handle all business logic for trucks and drivers.
 
-* Authenticate a user (all roles).
-* Requires email and password.
-* Returns access token and user information (ID, name, email, role).
-* Errors: Missing fields, invalid credentials.
+* **TruckController:** Handles creating, updating, deleting, and fetching trucks. It also implements driver assignment using the **AssignmentService**, which encapsulates rules for assigning a driver to a truck.
+* **DriverController:** Handles similar CRUD operations for drivers and ensures that truck-driver relationships are correctly populated when retrieving data.
 
----
-
-### **3. Logout**
-
-**POST** `/auth/logout`
-
-* Stateless logout.
-* Client should remove JWT token after successful response.
+Both controllers use `req.user.id` to log **audit information**, ensuring traceability of all operations.
 
 ---
 
-### **4. Forgot Password**
+## **3. Assignment Service**
 
-**POST** `/auth/forgot-password`
+The **AssignmentService** encapsulates the logic for assigning drivers to trucks. It enforces these business rules:
 
-* Generate a password reset token and send it via email.
-* Requires a valid email address.
-* Returns a message indicating that a password reset token has been sent.
-* Errors: Invalid email, user not found.
+* A driver must be **available**.
+* A truck must be **available**.
+* A driver cannot be assigned to the same truck twice.
 
----
-
-### **5. Reset Password**
-
-**POST** `/auth/reset-password`
-
-* Reset password using the token received via email.
-* Requires email, reset token, and new password.
-* Returns a success message after password is updated.
-* Errors: Invalid or expired reset token, invalid password.
+Once the checks pass, the service updates both the truck and driver documents in the database, updating statuses (`in-use` for trucks, `assigned` for drivers) and maintaining an **audit trail** of who performed the assignment. This separation of concerns ensures maintainability and consistent application of business rules.
 
 ---
 
-## **User Management Endpoints**
+## **4. Routes and Role-Based Access Control**
 
-> **Note:** All user endpoints require a valid JWT token in the `Authorization` header.
+All routes are protected via authentication middleware, with **role-based authorization** for sensitive operations:
 
-### **1. Create User**
+* Only users with roles **superadmin** or **admin** can create, update, delete, or assign trucks and drivers.
+* Regular authenticated users can view trucks and drivers but cannot modify them.
 
-**POST** `/user/`
+### **Truck Routes**
 
-* Accessible by **Super Admin** and **Admin** only.
-* Admins can only create operators.
-* Returns a message confirming user creation.
-* Errors: Missing fields, unauthorized role, email already exists.
+| Method | Endpoint                    | Role             | Description                                  |
+| ------ | --------------------------- | ---------------- | -------------------------------------------- |
+| POST   | `/trucks`                   | superadmin/admin | Create a new truck                           |
+| GET    | `/trucks`                   | Authenticated    | Retrieve all trucks (optional status filter) |
+| GET    | `/trucks/:id`               | Authenticated    | Retrieve truck by ID                         |
+| PUT    | `/trucks/:id`               | superadmin/admin | Update truck details                         |
+| DELETE | `/trucks/:id`               | superadmin       | Delete a truck                               |
+| POST   | `/trucks/:id/assign-driver` | superadmin/admin | Assign a driver to a truck                   |
 
----
+### **Driver Routes**
 
-### **2. Update User**
-
-**PUT** `/user/:id`
-
-* Accessible by **Super Admin** and **Admin** (Admins can only update operators).
-* Supports updating name, email, password, role, and active status.
-* Errors: User not found, unauthorized role, cannot modify Super Admin.
-
----
-
-### **3. Delete User**
-
-**DELETE** `/user/:id`
-
-* Accessible by **Super Admin** and **Admin** (Admins can only delete operators).
-* Returns a message confirming deletion.
-* Errors: User not found, unauthorized role, cannot delete Super Admin.
+| Method | Endpoint       | Role             | Description                                   |
+| ------ | -------------- | ---------------- | --------------------------------------------- |
+| POST   | `/drivers`     | superadmin/admin | Create a new driver                           |
+| GET    | `/drivers`     | Authenticated    | Retrieve all drivers (optional status filter) |
+| GET    | `/drivers/:id` | Authenticated    | Retrieve driver by ID                         |
+| PUT    | `/drivers/:id` | superadmin/admin | Update driver details                         |
+| DELETE | `/drivers/:id` | superadmin/admin | Delete a driver                               |
 
 ---
 
-## **Middleware & Roles**
+## **5. Overall Design and Features**
 
-* **JWT Authentication:** Required for all `/user` endpoints.
-* **Roles:**
+This system provides:
 
-  * `super_admin`: Full access
-  * `admin`: Can manage operators
-  * `operator`: Cannot manage users
+* **CRUD operations** for trucks and drivers with proper error handling.
+* **Many-to-many relationship management** between trucks and drivers.
+* **Business rule enforcement** for driver assignments.
+* **Audit trails** to track who created or updated records.
+* **Role-based security** to protect sensitive operations.
+* **Populated relational data** when fetching records, simplifying front-end integration.
 
----
-
-## **Error Codes Summary**
-
-| Code | Meaning                            |
-| ---- | ---------------------------------- |
-| 400  | Bad Request / Validation Error     |
-| 401  | Unauthorized / Invalid credentials |
-| 403  | Forbidden / Access denied          |
-| 404  | Not Found                          |
-| 409  | Conflict / Duplicate entry         |
-| 500  | Internal Server Error              |
+Overall, this design results in a **robust, enterprise-ready backend** for fleet management, emphasizing **data integrity, security, maintainability, and clear separation of business logic**.
 
 ---
 
->>>>>>> d64aacf46bc5a4a63bd523dcf3a712a01d7415c1
+If you want, I can now **turn this into a clean README.md file** ready to drop into your project, fully formatted with sections, tables, and professional style.
+
+Do you want me to do that?
