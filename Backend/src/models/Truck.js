@@ -26,4 +26,3 @@ const truckSchema = new mongoose.Schema(
 module.exports = mongoose.model('Truck', truckSchema);
 
 
-HOW much deos this truck create per month and trip
