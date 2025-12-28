@@ -8,7 +8,7 @@ const authorizeRoles= require('../middlewares/authorizeRoles');
 router.use(authMiddleware);
 
 // CREATE truck → only superadmin or admin
-router.post('/', authorizeRoles('superadmin', 'admin'), TruckController.createTruck);
+router.post('/', authorizeRoles('super_admin', 'admin'), TruckController.createTruck);
 
 // GET all trucks → any authenticated user
 router.get('/', TruckController.getAllTrucks);
@@ -17,12 +17,12 @@ router.get('/', TruckController.getAllTrucks);
 router.get('/:id', TruckController.getTruckById);
 
 // UPDATE truck → only superadmin or admin
-router.put('/:id', authorizeRoles('superadmin', 'admin'), TruckController.updateTruck);
+router.put('/:id', authorizeRoles('super_admin', 'admin'), TruckController.updateTruck);
 
 // DELETE truck → only superadmin
-router.delete('/:id', authorizeRoles('superadmin, admin'), TruckController.deleteTruck);
+router.delete('/:id', authorizeRoles('super_admin, admin'), TruckController.deleteTruck);
 
 // ASSIGN driver to truck → only superadmin or admin
-router.post('/:id/assign-driver', authorizeRoles('superadmin', 'admin'), TruckController.assignDriver);
+router.post('/:id/assign-driver', authorizeRoles('super_admin', 'admin'), TruckController.assignDriver);
 
 module.exports = router;

@@ -65,6 +65,94 @@ exports.updateUser = async (req, res) => {
 
 /**
  * ======================================================
+ * GET ALL USERS
+ * ======================================================
+ */
+exports.getAllUsers = async (req, res) => {
+  try {
+    const requesterRole = req.user.role;
+
+    if (requesterRole === "operator") {
+      return res.status(403).json({ message: "Operator cannot view users" });
+    }
+
+    let filter = {};
+
+    // Admin can only view operators
+    if (requesterRole === "admin") {
+      filter.role = "operator";
+    }
+
+    const users = await User.find(filter).select("-password");
+
+    return res.status(200).json({
+      message: "Users fetched successfully",
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    console.error("Get All Users Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+/**
+ * ======================================================
+ * GET USER BY ID
+ * ======================================================
+ */
+exports.getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const requesterRole = req.user.role;
+
+    if (requesterRole === "operator") {
+      return res.status(403).json({ message: "Operator cannot view users" });
+    }
+
+    const user = await User.findById(id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Admin can only view operators
+    if (requesterRole === "admin" && user.role !== "operator") {
+      return res.status(403).json({ message: "Admin can only view operators" });
+    }
+
+    // Prevent viewing Super Admin
+    if (user.role === "super_admin" && requesterRole !== "super_admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    return res.status(200).json({
+      message: "User fetched successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Get User By ID Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * ======================================================
  * DELETE USER
  * ======================================================
  */

@@ -11,6 +11,7 @@ const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const truckRoutes = require("./routes/truck.routes");
 const driverRoutes = require("./routes/driver.routes");
+const tripRoutes = require("./routes/trip.routes");
 
 const app = express();
 
@@ -29,13 +30,29 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://fleet-frontend-zeta.vercel.app",
+];
+
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman, mobile apps)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 
 /* =======================
    DATABASE CONNECTION
@@ -49,6 +66,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/drivers", driverRoutes);
 app.use("/api/trucks", truckRoutes);
+app.use("/api/trips", tripRoutes);
 
 /* =======================
    HEALTH & ROOT

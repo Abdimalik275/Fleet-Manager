@@ -7,9 +7,9 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: { type: String, enum: ["super_admin", "admin", "operator"], default: "operator", index: true },
     isActive: { type: Boolean, default: true, index: true },
-    phone: { type: String, default: null },
-    resetToken: { type: String, default: null }, 
-    resetTokenExpires: { type: Date, default: null }
+    // phone: { type: String, default: null },
+    // resetToken: { type: String, default: null }, 
+    // resetTokenExpires: { type: Date, default: null }
   },
   { timestamps: true }
 );
