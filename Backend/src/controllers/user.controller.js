@@ -53,7 +53,7 @@ exports.updateUser = async (req, res) => {
     if (email) user.email = email;
     if (typeof isActive === "boolean") user.isActive = isActive;
     if (password) user.password = await bcrypt.hash(password, Number(process.env.BCRYPT_SALT_ROUNDS) || 12);
-    if (role && requesterRole === "super_admin") user.role = role; // only super admin can change role
+    if (role && requesterRole === "super_admin") user.role = role;
 
     await user.save();
     return res.status(200).json({ message: "User updated successfully" });

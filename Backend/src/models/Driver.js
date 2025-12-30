@@ -8,7 +8,6 @@ const driverSchema = new mongoose.Schema(
 
 
   
-
     // Driver availability
     status: {
       type: String,
