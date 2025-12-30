@@ -6,12 +6,8 @@ const driverSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     licenseNumber: { type: String, required: true, unique: true },
 
-    // Salary configuration
-    salaryType: {
-      type: String,
-      enum: ['monthly', 'per-trip'],
-      required: true,
-    },
+
+  
 
     // Driver availability
     status: {

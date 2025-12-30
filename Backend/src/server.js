@@ -13,6 +13,7 @@ const truckRoutes = require("./routes/truck.routes");
 const driverRoutes = require("./routes/driver.routes");
 const tripRoutes = require("./routes/trip.routes");
 
+
 const app = express();
 
 /* =======================
@@ -37,16 +38,16 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, mobile apps)
-      if (!origin) return callback(null, true);
+    // origin: function (origin, callback) {
+    //   // Allow requests with no origin (Postman, mobile apps)
+    //   if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    //   if (allowedOrigins.includes(origin)) {
+    //     callback(null, true);
+    //   } else {
+    //     callback(new Error("Not allowed by CORS"));
+    //   }
+    // },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -60,7 +61,7 @@ app.use(
 connectDB();
 
 /* =======================
-   ROUTES
+ API   ROUTES
 ======================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

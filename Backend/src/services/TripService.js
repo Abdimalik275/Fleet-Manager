@@ -1,96 +1,78 @@
 const Trip = require("../models/Trip");
-const Driver = require("../models/Driver");
-const Truck =  require("../models/Truck");
+const Expense = require("../models/Expense");
 
+/**
+ * TripService
+ * ----------------------------
+ * Handles all business logic related to trips.
+ */
 
-// CREATE TRIP
-
-exports.createTrip = async (data, userId) => {
- const { driverId, truckId } = data;
-
- // Check driver availability
- const driver = await Driver.findById(driverId);
- if (!driver) {
-   throw new Error("Driver not found");
- }
- if (driver.status !== "available") {
-   throw new Error("Driver is not available");
- }
-
- // Check truck availability
- const truck = await Truck.findById(truckId);
- if (!truck) {
-   throw new Error("Truck not found");
- }
- if (truck.status !== "available") {
-   throw new Error("Truck is not available");
- }
-
- // Create trip
- const trip = await Trip.create({
-   ...data,
-   createdBy: userId,
- });
-
- // Update statuses
- driver.status = "assigned";
- truck.status = "assigned";
- await driver.save();
- await truck.save();
-
- return trip;
+// Create a new trip
+exports.createTrip = async (data) => {
+  return Trip.create(data);
 };
 
+// Get all trips with optional filters
+exports.getAllTrips = async (filters = {}) => {
+  return Trip.find(filters)
+    .populate("truckId", "name plateNumber")
+    .populate("driverId", "name")
+    .populate("createdBy", "name email")
+    .populate("updatedBy", "name email")
+    .lean();
+};
 
-// UPDATE TRIP
+// Get a single trip by ID
+exports.getTripById = async (tripId) => {
+  return Trip.findById(tripId)
+    .populate("truckId", "name plateNumber")
+    .populate("driverId", "name")
+    .populate("createdBy", "name email")
+    .populate("updatedBy", "name email")
+    .lean();
+};
 
+// Update trip details
 exports.updateTrip = async (tripId, data, userId) => {
- const trip = await Trip.findById(tripId);
- if (!trip) {
-   throw new Error("Trip not found");
- }
-
- Object.assign(trip, data);
- trip.updatedBy = userId;
- await trip.save();
-
- return trip;
+  return Trip.findByIdAndUpdate(
+    tripId,
+    { ...data, updatedBy: userId },
+    { new: true }
+  );
 };
 
-
-//COMPLETE TRIP
+// Mark trip as completed
 exports.completeTrip = async (tripId) => {
- const trip = await Trip.findById(tripId);
- if (!trip) {
-   throw new Error("Trip not found");
- }
-
- if (trip.status === "completed") {
-   throw new Error("Trip already completed");
- }
-
- trip.status = "completed";
- trip.endTime = new Date();
- await trip.save();
-
- // Release driver & truck
- await Driver.findByIdAndUpdate(trip.driverId, {
-   status: "available",
- });
-
- await Truck.findByIdAndUpdate(trip.truckId, {
-   status: "available", 
- });
-
- return trip;
+  return Trip.findByIdAndUpdate(
+    tripId,
+    { status: "completed", endTime: new Date() },
+    { new: true }
+  );
 };
 
+// Delete a trip
+exports.deleteTrip = async (tripId) => {
+  return Trip.findByIdAndDelete(tripId);
+};
 
-// GET TRIPS
+// Get trips along with their expenses, totals, and profit
+exports.getTripsWithExpenses = async (filters = {}) => {
+  const trips = await Trip.find(filters).lean();
 
-exports.getTrips = async (filter = {}) => {
- return Trip.find(filter)
-   .populate("driverId", "name phone")
-   .populate("truckId", "plateNumber model")
-   .sort({ createdAt: -1 });
+  for (let trip of trips) {
+    const expenses = await Expense.find({ tripId: trip._id }).lean();
+
+    // Calculate total expenses used
+    const totalExpenses = expenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0
+    );
+
+    // Attach expenses + totals
+    trip.expenses = expenses;
+    trip.totalExpenses = totalExpenses;
+    trip.profit = trip.transport - totalExpenses;
+  }
+
+  return trips;
 };

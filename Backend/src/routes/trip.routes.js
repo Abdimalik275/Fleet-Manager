@@ -1,33 +1,24 @@
 const express = require("express");
-const {
-  createTrip,
-  updateTrip,
-  completeTrip,
-  getTrips,
-  getTripById,
-} = require("../controllers/trip.controller");
-
-const auth = require("../middlewares/auth.middlewares");
-const role = require("../middlewares/authorizeRoles");
+const TripController = require("../controllers/trip.controller");
+const ExpenseController = require("../controllers/expense.controller");
 
 const router = express.Router();
 
-// All trip routes require authentication
-router.use(auth);
+// --------------------
+// Trip routes
+// --------------------
+router.post("/", TripController.createTrip);              // Create trip
+router.get("/", TripController.getAllTrips);              // Get all trips
+router.get("/:id", TripController.getTripById);           // Get single trip
+router.put("/:id", TripController.updateTrip);            // Update trip
+router.patch("/:id/complete", TripController.completeTrip); // Complete trip
+router.delete("/:id", TripController.deleteTrip);         // Delete trip
+router.get("/report/download", TripController.downloadTripReport); // Trip report
 
-// CREATE trip → admin, superadmin, operator
-router.post("/", role(["admin", "superadmin", "operator"]), createTrip);
-
-// GET all trips → any authenticated user
-router.get("/", getTrips);
-
-// GET trip by ID → any authenticated user
-router.get("/:id", getTripById);
-
-// UPDATE trip → admin, superadmin, operator
-router.put("/:id", role(["admin", "superadmin", "operator"]), updateTrip);
-
-// COMPLETE trip → admin, superadmin, operator
-router.post("/:id/complete", role(["admin", "superadmin", "operator"]), completeTrip);
+// --------------------
+// Expense routes
+// --------------------
+router.post("/:tripId/expenses", ExpenseController.addExpense);   // Add expense to trip
+router.get("/:tripId/expenses", ExpenseController.getExpensesByTrip); // Get expenses for trip
 
 module.exports = router;

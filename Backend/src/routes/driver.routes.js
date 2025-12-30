@@ -8,10 +8,18 @@ const authorizeRole = require('../middlewares/authorizeRoles');
 // All routes require authentication
 router.use(authMiddleware);
 
+// Normalize role ONLY for driver module
+router.use((req, res, next) => {
+  if (req.user && req.user.role) {
+    req.user.role = req.user.role.toLowerCase();
+  }
+  next();
+});
+
 // Create driver — only superadmin or admin
 router.post(
   '/',
-  authorizeRole(['superadmin', 'admin']),
+  authorizeRole('super_admin', 'admin'),
   DriverController.createDriver
 );
 
@@ -24,14 +32,14 @@ router.get('/:id', DriverController.getDriverById);
 // Update driver — only superadmin or admin
 router.put(
   '/:id',
-  authorizeRole(['superadmin', 'admin']),
+  authorizeRole('super_admin', 'admin'),
   DriverController.updateDriver
 );
 
 // Delete driver — only superadmin or admin
 router.delete(
   '/:id',
-  authorizeRole(['superadmin', 'admin']),
+  authorizeRole('super_admin', 'admin'),
   DriverController.deleteDriver
 );
 
