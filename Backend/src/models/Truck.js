@@ -12,10 +12,11 @@ const truckSchema = new mongoose.Schema(
       default: 'available',
     },
 
-    // Multiple drivers (shifts / co-drivers)
-    assignedDrivers: [
-      { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' },
-    ],
+    // Single driver assignment
+    assignedDriver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Driver',
+    },
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -24,5 +25,3 @@ const truckSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('Truck', truckSchema);
-
-

@@ -2,8 +2,7 @@ const Driver = require('../models/Driver');
 const Truck = require('../models/Truck');
 
 class AssignmentService {
-  async assignDriverTruck({ driverId, truckId, performedBy }) {   
-
+  async assignDriverTruck({ driverId, truckId, performedBy }) {
     // Find driver
     const driver = await Driver.findById(driverId);
     if (!driver) throw new Error('Driver is not found');
@@ -16,8 +15,11 @@ class AssignmentService {
     if (driver.status !== 'available') {
       throw new Error("Driver is not available");
     }
-    if (truck.status !== 'available') {   
+    if (truck.status !== 'available') {
       throw new Error("Truck is not available");
+    }
+    if (truck.assignedDriver) {
+      throw new Error("Truck already has an assigned driver");
     }
     if (driver.assignedTrucks.includes(truckId)) {
       throw new Error("Driver already assigned to this truck");
@@ -29,7 +31,7 @@ class AssignmentService {
     driver.updatedBy = performedBy;        // audit trail
 
     // Update truck record
-    truck.assignedDrivers.push(driverId);  // link driver to truck
+    truck.assignedDriver = driverId;       // single driver assignment
     truck.status = 'in-use';               // mark truck as in-use
     truck.updatedBy = performedBy;         // audit trail
 
