@@ -1,40 +1,43 @@
 const Driver = require('../models/Driver');
 const Truck = require('../models/Truck');
 
- class AssignmentService{
-     async assignDriverTruck({ driverId, truckId, performeBy}){
-         const driver = await Driver.findById(driverId);
-         if(!driver) throw new Error(' Driver is not found');
+class AssignmentService {
+  async assignDriverTruck({ driverId, truckId, performedBy }) {   
 
-          const truck  = await Truck.findById(truckId);
-           if(!truck) throw new Error('Truck is not Found');
+    // Find driver
+    const driver = await Driver.findById(driverId);
+    if (!driver) throw new Error('Driver is not found');
 
-            //Bussines Rule 
-            if(driver.status !== 'available'){
-                throw new Error ("Driver is not Available");
-            }
-            if(Truck.status !== 'available'){
-                throw new Error ("truck is not Available");
-            }
-            if(driver.assignedTrucks.includes(truckId)){
-                throw new Error ("Driver already Assigned to this truck");
-            }
+    // Find truck
+    const truck = await Truck.findById(truckId);
+    if (!truck) throw new Error('Truck is not found');
+
+    // Business rules
+    if (driver.status !== 'available') {
+      throw new Error("Driver is not available");
+    }
+    if (truck.status !== 'available') {   
+      throw new Error("Truck is not available");
+    }
+    if (driver.assignedTrucks.includes(truckId)) {
+      throw new Error("Driver already assigned to this truck");
+    }
 
     // Update driver record
     driver.assignedTrucks.push(truckId);   // link truck to driver
-    driver.status = 'assigned';           // mark driver as assigned
-    driver.updatedBy = performedBy;       // audit trail: who performed action
+    driver.status = 'assigned';            // mark driver as assigned
+    driver.updatedBy = performedBy;        // audit trail
 
     // Update truck record
-    truck.assignedDrivers.push(driverId); // link driver to truck
-    truck.status = 'in-use';              // mark truck as in-use
-    truck.updatedBy = performedBy;        // audit trail: who performed action
+    truck.assignedDrivers.push(driverId);  // link driver to truck
+    truck.status = 'in-use';               // mark truck as in-use
+    truck.updatedBy = performedBy;         // audit trail
 
-    //  Save both documents
+    // Save both documents
     await driver.save();
     await truck.save();
 
-    //  Return updated entities
+    // Return updated entities
     return { driver, truck };
   }
 }
