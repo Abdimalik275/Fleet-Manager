@@ -1,14 +1,10 @@
 const TruckService = require("../services/TruckSerivice");
 
-// CREATE truck (with optional driver)
+// CREATE truck
 const createTruck = async (req, res) => {
   try {
     const truck = await TruckService.createTruck(req.body, req.user.id);
-    res.status(201).json({
-      success: true,
-      message: "Truck created successfully",
-      data: truck,
-    });
+    res.status(201).json({ success: true, message: "Truck created successfully", data: truck });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -32,11 +28,9 @@ const getAllTrucks = async (req, res) => {
 const getTruckById = async (req, res) => {
   try {
     const truck = await TruckService.getTruckById(req.params.id);
-    if (!truck) return res.status(404).json({ success: false, message: "Truck not found" });
-
     res.json({ success: true, data: truck });
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    res.status(404).json({ success: false, message: err.message });
   }
 };
 
@@ -60,10 +54,10 @@ const deleteTruck = async (req, res) => {
   }
 };
 
-// ASSIGN OR CHANGE DRIVER
+// ASSIGN or UPDATE driver
 const assignDriver = async (req, res) => {
   try {
-    const truck = await TruckService.assignDriver(req.params.id, req.body.driver, req.user.id);
+    const truck = await TruckService.assignDriver(req.params.id, req.body, req.user.id);
     res.json({ success: true, message: "Driver assigned successfully", data: truck });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
