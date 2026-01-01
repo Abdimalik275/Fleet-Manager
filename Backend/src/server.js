@@ -10,7 +10,6 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const truckRoutes = require("./routes/truck.routes");
-const driverRoutes = require("./routes/driver.routes");
 const tripRoutes = require("./routes/trip.routes");
 
 
@@ -65,7 +64,6 @@ connectDB();
 ======================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/drivers", driverRoutes);
 app.use("/api/trucks", truckRoutes);
 app.use("/api/trips", tripRoutes);
 

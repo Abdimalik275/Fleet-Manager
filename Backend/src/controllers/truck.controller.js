@@ -1,131 +1,72 @@
-const Truck = require('../models/Truck');
-const AssignmentService = require('../services/AssignmentService');
+const TruckService = require("../services/TruckSerivice");
 
-// CREATE TRUCK
+// CREATE truck (with optional driver)
 const createTruck = async (req, res) => {
   try {
-    const truck = await Truck.create({
-      ...req.body,
-      createdBy: req.user.id, // audit trail
-    });
-    res.status(201).json({ 
-      success: true, 
+    const truck = await TruckService.createTruck(req.body, req.user.id);
+    res.status(201).json({
+      success: true,
       message: "Truck created successfully",
-      data: truck
+      data: truck,
     });
   } catch (err) {
-    // Handle duplicate plateNumber error
-    if (err.code === 11000 && err.keyPattern && err.keyPattern.plateNumber) {
-      return res.status(400).json({
-        success: false,
-        message: "Truck with this plate number already exists"
-      });
-    }
-
-    res.status(400).json({ 
-      success: false, 
-      message: `Failed to create truck: ${err.message}` 
-    });
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
-// GET ALL TRUCKS
+// GET all trucks
 const getAllTrucks = async (req, res) => {
   try {
-    const filter = req.query.status ? { status: req.query.status } : {};
-    const trucks = await Truck.find(filter).populate('assignedDrivers');
-    res.json({ 
-      success: true, 
+    const trucks = await TruckService.getAllTrucks();
+    res.json({
+      success: true,
       message: trucks.length ? "Trucks retrieved successfully" : "No trucks found",
-      data: trucks 
+      data: trucks,
     });
   } catch (err) {
-    res.status(400).json({ 
-      success: false, 
-      message: `Failed to get trucks: ${err.message}` 
-    });
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
-// GET TRUCK BY ID
+// GET truck by ID
 const getTruckById = async (req, res) => {
   try {
-    const truck = await Truck.findById(req.params.id).populate('assignedDrivers');
-    if (!truck) 
-      return res.status(404).json({ success: false, message: 'Truck not found' });
-    res.json({ 
-      success: true, 
-      message: "Truck retrieved successfully",
-      data: truck 
-    });
+    const truck = await TruckService.getTruckById(req.params.id);
+    if (!truck) return res.status(404).json({ success: false, message: "Truck not found" });
+
+    res.json({ success: true, data: truck });
   } catch (err) {
-    res.status(400).json({ 
-      success: false, 
-      message: `Failed to get truck: ${err.message}` 
-    });
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
-// UPDATE TRUCK
+// UPDATE truck
 const updateTruck = async (req, res) => {
   try {
-    const truck = await Truck.findByIdAndUpdate(
-      req.params.id,
-      { ...req.body, updatedBy: req.user.id },
-      { new: true }
-    );
-    if (!truck) 
-      return res.status(404).json({ success: false, message: 'Truck not found' });
-    res.json({ 
-      success: true, 
-      message: "Truck updated successfully",
-      data: truck 
-    });
+    const truck = await TruckService.updateTruck(req.params.id, req.body, req.user.id);
+    res.json({ success: true, message: "Truck updated successfully", data: truck });
   } catch (err) {
-    res.status(400).json({ 
-      success: false, 
-      message: `Failed to update truck: ${err.message}` 
-    });
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
-// DELETE TRUCK
+// DELETE truck
 const deleteTruck = async (req, res) => {
   try {
-    const truck = await Truck.findByIdAndDelete(req.params.id);
-    if (!truck) 
-      return res.status(404).json({ success: false, message: 'Truck not found' });
-    res.json({ 
-      success: true, 
-      message: "Truck deleted successfully" 
-    });
+    await TruckService.deleteTruck(req.params.id);
+    res.json({ success: true, message: "Truck deleted successfully" });
   } catch (err) {
-    res.status(400).json({ 
-      success: false, 
-      message: `Failed to delete truck: ${err.message}` 
-    });
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
-// ASSIGN DRIVER TO TRUCK
+// ASSIGN OR CHANGE DRIVER
 const assignDriver = async (req, res) => {
   try {
-    const { driverId } = req.body;
-    const truckId = req.params.id;
-    const performedBy = req.user.id;
-
-    const result = await AssignmentService.assignDriverTruck({ driverId, truckId, performedBy });
-
-    res.status(200).json({ 
-      success: true, 
-      message: "Driver assigned to truck successfully",
-      data: result 
-    });
+    const truck = await TruckService.assignDriver(req.params.id, req.body.driver, req.user.id);
+    res.json({ success: true, message: "Driver assigned successfully", data: truck });
   } catch (err) {
-    res.status(400).json({ 
-      success: false, 
-      message: `Failed to assign driver: ${err.message}` 
-    });
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
