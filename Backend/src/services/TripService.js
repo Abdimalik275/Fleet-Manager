@@ -18,6 +18,7 @@ exports.createTrip = async (data) => {
   const trip = await Trip.create({
     ...data,
     status: "in-progress",
+    // ➡️ createdBy is passed in from controller as req.user.id
   });
 
   truck.status = "in-use";
@@ -54,7 +55,7 @@ exports.getTripById = async (tripId) => {
 exports.updateTrip = async (tripId, data, userId) => {
   return Trip.findByIdAndUpdate(
     tripId,
-    { ...data, updatedBy: userId },
+    { ...data, updatedBy: userId }, // ➡️ userId comes from req.user.id
     { new: true }
   );
 };
@@ -68,7 +69,7 @@ exports.completeTrip = async (tripId, userId) => {
 
   trip.status = "completed";
   trip.endTime = new Date();
-  trip.updatedBy = userId;
+  trip.updatedBy = userId; // ➡️ userId comes from req.user.id
   await trip.save();
 
   await Truck.findByIdAndUpdate(trip.truckId, { status: "available" });

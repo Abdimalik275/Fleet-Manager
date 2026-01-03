@@ -7,9 +7,17 @@ const TripService = require("../services/TripService");
  */
 exports.createTrip = async (req, res) => {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!req.body || !req.body.truckId) {
+      return res.status(400).json({ success: false, message: "truckId is required" });
+    }
+
     const trip = await TripService.createTrip({
       ...req.body,
-      createdBy: req.user.id,
+      createdBy: req.user.id, // ➡️ corrected to use id
     });
 
     res.status(201).json({
@@ -18,6 +26,7 @@ exports.createTrip = async (req, res) => {
       data: trip,
     });
   } catch (err) {
+    console.error("createTrip error:", err);
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -37,6 +46,7 @@ exports.getAllTrips = async (req, res) => {
       data: trips,
     });
   } catch (err) {
+    console.error("getAllTrips error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -50,12 +60,17 @@ exports.getTripById = async (req, res) => {
   try {
     const trip = await TripService.getTripById(req.params.id);
 
+    if (!trip) {
+      return res.status(404).json({ success: false, message: "Trip not found" });
+    }
+
     res.status(200).json({
       success: true,
       message: "Trip fetched successfully",
       data: trip,
     });
   } catch (err) {
+    console.error("getTripById error:", err);
     res.status(404).json({ success: false, message: err.message });
   }
 };
@@ -67,10 +82,14 @@ exports.getTripById = async (req, res) => {
  */
 exports.updateTrip = async (req, res) => {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
     const trip = await TripService.updateTrip(
       req.params.id,
       req.body,
-      req.user.id
+      req.user.id // ➡️ corrected to use id
     );
 
     res.status(200).json({
@@ -79,6 +98,7 @@ exports.updateTrip = async (req, res) => {
       data: trip,
     });
   } catch (err) {
+    console.error("updateTrip error:", err);
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -90,7 +110,11 @@ exports.updateTrip = async (req, res) => {
  */
 exports.completeTrip = async (req, res) => {
   try {
-    const trip = await TripService.completeTrip(req.params.id, req.user.id);
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const trip = await TripService.completeTrip(req.params.id, req.user.id); // ➡️ corrected to use id
 
     res.status(200).json({
       success: true,
@@ -98,6 +122,7 @@ exports.completeTrip = async (req, res) => {
       data: trip,
     });
   } catch (err) {
+    console.error("completeTrip error:", err);
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -116,6 +141,7 @@ exports.deleteTrip = async (req, res) => {
       message: "Trip deleted successfully",
     });
   } catch (err) {
+    console.error("deleteTrip error:", err);
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -135,13 +161,14 @@ exports.downloadTripReport = async (req, res) => {
       data: tripsWithExpenses,
     });
   } catch (err) {
+    console.error("downloadTripReport error:", err);
     res.status(400).json({ success: false, message: err.message });
   }
 };
 
 /**
  * TRUCK MONTHLY REPORT
- * ---------------------------------
+ * --------------------------------- 
  * Handles GET /api/trucks/:id/report/monthly
  */
 exports.getTruckMonthlyReport = async (req, res) => {
@@ -161,6 +188,7 @@ exports.getTruckMonthlyReport = async (req, res) => {
       data: report,
     });
   } catch (err) {
+    console.error("getTruckMonthlyReport error:", err);
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -183,6 +211,7 @@ exports.getTruckYearlyReport = async (req, res) => {
       data: report,
     });
   } catch (err) {
+    console.error("getTruckYearlyReport error:", err);
     res.status(400).json({ success: false, message: err.message });
   }
 };
