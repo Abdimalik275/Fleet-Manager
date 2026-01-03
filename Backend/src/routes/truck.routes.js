@@ -22,7 +22,6 @@ router.put("/:id", authorizeRoles("super_admin", "admin"), TruckController.updat
 // DELETE truck → superadmin only
 router.delete("/:id", authorizeRoles("super_admin"), TruckController.deleteTruck);
 
-// ASSIGN driver → superadmin or admin
-router.post("/:id/assign-driver", authorizeRoles("super_admin", "admin"), TruckController.assignDriver);
+
 
 module.exports = router;

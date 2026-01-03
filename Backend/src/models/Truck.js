@@ -13,7 +13,7 @@ const truckSchema = new mongoose.Schema(
     },
 
     driverName: { type: String, default: null }, 
-    PhonNumber: { type: Number, default: null }, 
+    PhoneNumber: { type: Number, default: null }, 
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

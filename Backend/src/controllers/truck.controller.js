@@ -54,15 +54,7 @@ const deleteTruck = async (req, res) => {
   }
 };
 
-// ASSIGN or UPDATE driver
-const assignDriver = async (req, res) => {
-  try {
-    const truck = await TruckService.assignDriver(req.params.id, req.body, req.user.id);
-    res.json({ success: true, message: "Driver assigned successfully", data: truck });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
-  }
-};
+
 
 module.exports = {
   createTruck,
@@ -70,5 +62,5 @@ module.exports = {
   getTruckById,
   updateTruck,
   deleteTruck,
-  assignDriver,
+
 };

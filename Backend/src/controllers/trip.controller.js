@@ -4,13 +4,12 @@ const TripService = require("../services/TripService");
  * CREATE TRIP
  * ---------------------------------
  * Handles POST /api/trips
- * Creates a new trip record with transport money set.
  */
 exports.createTrip = async (req, res) => {
   try {
     const trip = await TripService.createTrip({
       ...req.body,
-      createdBy: req.user._id, // track who created the trip
+      createdBy: req.user._id,
     });
 
     res.status(201).json({
@@ -27,7 +26,6 @@ exports.createTrip = async (req, res) => {
  * GET ALL TRIPS
  * ---------------------------------
  * Handles GET /api/trips
- * Fetches all trips with optional filters (e.g. status, driver).
  */
 exports.getAllTrips = async (req, res) => {
   try {
@@ -47,7 +45,6 @@ exports.getAllTrips = async (req, res) => {
  * GET SINGLE TRIP
  * ---------------------------------
  * Handles GET /api/trips/:id
- * Fetches one trip by its ID.
  */
 exports.getTripById = async (req, res) => {
   try {
@@ -67,7 +64,6 @@ exports.getTripById = async (req, res) => {
  * UPDATE TRIP
  * ---------------------------------
  * Handles PUT /api/trips/:id
- * Updates trip details and records who updated it.
  */
 exports.updateTrip = async (req, res) => {
   try {
@@ -91,7 +87,6 @@ exports.updateTrip = async (req, res) => {
  * COMPLETE TRIP
  * ---------------------------------
  * Handles PATCH /api/trips/:id/complete
- * Marks a trip as completed and sets its end time.
  */
 exports.completeTrip = async (req, res) => {
   try {
@@ -111,7 +106,6 @@ exports.completeTrip = async (req, res) => {
  * DELETE TRIP
  * ---------------------------------
  * Handles DELETE /api/trips/:id
- * Removes a trip from the database.
  */
 exports.deleteTrip = async (req, res) => {
   try {
@@ -127,11 +121,9 @@ exports.deleteTrip = async (req, res) => {
 };
 
 /**
- * DOWNLOAD TRIP REPORT (JSON only)
+ * DOWNLOAD TRIP REPORT
  * ---------------------------------
  * Handles GET /api/trips/report/download
- * Fetches trips with their expenses, total expenses used, and profit.
- * TripService.getTripsWithExpenses calculates totals and profit automatically.
  */
 exports.downloadTripReport = async (req, res) => {
   try {
@@ -140,7 +132,55 @@ exports.downloadTripReport = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Trip report generated successfully",
-      data: tripsWithExpenses, // includes expenses, totalExpenses, profit
+      data: tripsWithExpenses,
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * TRUCK MONTHLY REPORT
+ * ---------------------------------
+ * Handles GET /api/trucks/:id/report/monthly
+ */
+exports.getTruckMonthlyReport = async (req, res) => {
+  try {
+    const { id } = req.params; // truckId
+    const { start, end } = req.query; // month range
+
+    const report = await TripService.getTruckMonthlyReport(
+      id,
+      new Date(start),
+      new Date(end)
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Truck monthly report generated successfully",
+      data: report,
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * TRUCK YEARLY REPORT
+ * ---------------------------------
+ * Handles GET /api/trucks/:id/report/yearly
+ */
+exports.getTruckYearlyReport = async (req, res) => {
+  try {
+    const { id } = req.params; // truckId
+    const { year } = req.query; // e.g. 2026
+
+    const report = await TripService.getTruckYearlyReport(id, year);
+
+    res.status(200).json({
+      success: true,
+      message: "Truck yearly report generated successfully",
+      data: report,
     });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });

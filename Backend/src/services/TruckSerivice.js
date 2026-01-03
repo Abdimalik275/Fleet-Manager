@@ -54,19 +54,6 @@ class TruckService {
     return truck;
   }
 
-  // ASSIGN or UPDATE driver
-  async assignDriver(id, driverData, userId) {
-    const truck = await Truck.findById(id);
-    if (!truck) throw new Error("Truck not found");
-
-    truck.driverName = driverData.driverName || null;
-    truck.PhonNumber = driverData.PhonNumber || null;
-    truck.status = truck.driverName ? "in-use" : "available";
-    truck.updatedBy = userId;
-
-    await truck.save();
-    return truck;
-  }
 }
 
 module.exports = new TruckService();
