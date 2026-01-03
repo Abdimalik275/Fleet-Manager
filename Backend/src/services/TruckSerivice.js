@@ -17,7 +17,7 @@ class TruckService {
       capacity: data.capacity,
       status,
       driverName: data.driverName || null,
-      PhonNumber: data.PhonNumber || null,
+      PhoneNumber: data.PhoneNumber || null,
       createdBy: userId,
     });
 
