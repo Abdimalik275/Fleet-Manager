@@ -7,8 +7,8 @@ class TruckService {
     const existingTruck = await Truck.findOne({ plateNumber: data.plateNumber });
     if (existingTruck) throw new Error("Truck with this plate number already exists");
 
-    // Determine status automatically
-    let status = data.driverName && data.PhonNumber ? "in-use" : "available";
+    // Always default to available when creating a new truck
+    let status = "available";
 
     // Create truck
     const truck = await Truck.create({
@@ -53,7 +53,6 @@ class TruckService {
     if (!truck) throw new Error("Truck not found");
     return truck;
   }
-
 }
 
 module.exports = new TruckService();
