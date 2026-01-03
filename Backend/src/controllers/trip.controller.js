@@ -9,7 +9,7 @@ exports.createTrip = async (req, res) => {
   try {
     const trip = await TripService.createTrip({
       ...req.body,
-      createdBy: req.user._id,
+      createdBy: req.user.id,
     });
 
     res.status(201).json({
@@ -70,7 +70,7 @@ exports.updateTrip = async (req, res) => {
     const trip = await TripService.updateTrip(
       req.params.id,
       req.body,
-      req.user._id
+      req.user.id
     );
 
     res.status(200).json({
@@ -90,7 +90,7 @@ exports.updateTrip = async (req, res) => {
  */
 exports.completeTrip = async (req, res) => {
   try {
-    const trip = await TripService.completeTrip(req.params.id, req.user._id);
+    const trip = await TripService.completeTrip(req.params.id, req.user.id);
 
     res.status(200).json({
       success: true,
