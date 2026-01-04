@@ -18,7 +18,7 @@ exports.createTrip = async (data) => {
   const trip = await Trip.create({
     ...data,
     status: "in-progress",
-    // ➡️ createdBy is passed in from controller as req.user.id
+
   });
 
   truck.status = "in-use";

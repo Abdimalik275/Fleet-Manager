@@ -7,13 +7,17 @@ const TripService = require("../services/TripService");
  */
 exports.createTrip = async (req, res) => {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
     if (!req.body || !req.body.truckId) {
       return res.status(400).json({ success: false, message: "truckId is required" });
     }
 
     const trip = await TripService.createTrip({
       ...req.body,
-      createdBy: req.body.createdBy, // now taken directly from request body
+      createdBy: req.user.id, // ➡️ corrected to use id
     });
 
     res.status(201).json({
@@ -78,7 +82,15 @@ exports.getTripById = async (req, res) => {
  */
 exports.updateTrip = async (req, res) => {
   try {
-    const trip = await TripService.updateTrip(req.params.id, req.body, req.body.updatedBy);
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const trip = await TripService.updateTrip(
+      req.params.id,
+      req.body,
+      req.user.id // ➡️ corrected to use id
+    );
 
     res.status(200).json({
       success: true,
@@ -98,7 +110,11 @@ exports.updateTrip = async (req, res) => {
  */
 exports.completeTrip = async (req, res) => {
   try {
-    const trip = await TripService.completeTrip(req.params.id, req.body.updatedBy);
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const trip = await TripService.completeTrip(req.params.id, req.user.id); // ➡️ corrected to use id
 
     res.status(200).json({
       success: true,
@@ -152,7 +168,7 @@ exports.downloadTripReport = async (req, res) => {
 
 /**
  * TRUCK MONTHLY REPORT
- * ---------------------------------
+ * --------------------------------- 
  * Handles GET /api/trucks/:id/report/monthly
  */
 exports.getTruckMonthlyReport = async (req, res) => {
