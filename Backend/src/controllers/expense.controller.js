@@ -13,13 +13,13 @@ exports.addExpense = async (req, res) => {
     const expense = await ExpenseService.addExpense(
       req.params.tripId,   // trip ID from URL
       req.body,            // expense details (Payment, rate, reason)
-      req.user._id         // user who added the expense
+      req.user.id          // user who added the expense
     );
 
     res.status(201).json({
       success: true,
       message: "Expense added successfully",
-      data: expense,       // return the created expense
+      data: expense,
     });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -31,7 +31,6 @@ exports.addExpense = async (req, res) => {
  * ---------------------------------
  * Handles GET /api/trips/:tripId/expenses
  * Fetches all expenses linked to a specific trip.
- * Returns a list of expenses with their calculated amounts.
  */
 exports.getExpensesByTrip = async (req, res) => {
   try {
@@ -40,7 +39,27 @@ exports.getExpensesByTrip = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Expenses fetched successfully",
-      data: expenses,      // return all expenses for this trip
+      data: expenses,
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * GET EXPENSES BY TRUCK
+ * ---------------------------------
+ * Handles GET /api/trips/:id/expenses/report
+ * Aggregates all expenses across trips for a given truck.
+ */
+exports.getExpensesByTruck = async (req, res) => {
+  try {
+    const report = await ExpenseService.getExpensesByTruck(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Truck expenses report generated successfully",
+      data: report,
     });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });

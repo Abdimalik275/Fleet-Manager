@@ -1,8 +1,7 @@
 const express = require("express");
+const router = express.Router();
 const TripController = require("../controllers/trip.controller");
 const ExpenseController = require("../controllers/expense.controller");
-
-const router = express.Router();
 
 // --------------------
 // Trip routes
@@ -13,7 +12,7 @@ router.get("/:id", TripController.getTripById);              // Get single trip
 router.put("/:id", TripController.updateTrip);               // Update trip
 router.patch("/:id/complete", TripController.completeTrip);  // Complete trip
 router.delete("/:id", TripController.deleteTrip);            // Delete trip
-router.get("/report/download", TripController.downloadTripReport); // Trip report
+router.get("/report/download", TripController.downloadTripReport); // Download trip report
 
 // --------------------
 // Truck report routes
@@ -26,5 +25,10 @@ router.get("/:id/report/yearly", TripController.getTruckYearlyReport);   // Truc
 // --------------------
 router.post("/:tripId/expenses", ExpenseController.addExpense);        // Add expense to trip
 router.get("/:tripId/expenses", ExpenseController.getExpensesByTrip);  // Get expenses for trip
+
+// --------------------
+// Truck expenses report route
+// --------------------
+router.get("/:id/expenses/report", ExpenseController.getExpensesByTruck); // Get all expenses for truck
 
 module.exports = router;

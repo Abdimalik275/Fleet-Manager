@@ -20,7 +20,7 @@ const tripSchema = new mongoose.Schema(
       type: String,
       enum: ["AGO", "PMS", "JET A-1"],
       required: true,
-    },
+    },  
 
     // Route details
     route: {

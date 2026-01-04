@@ -1,39 +1,62 @@
-const Expense = require("../models/Expense");
 const Trip = require("../models/Trip");
+const Expense = require("../models/Expense");
 
 /**
- * ExpenseService
- * ----------------------------
- * Handles all business logic for expenses.
- * Adds expenses and ensures they deduct from trip transport money.
+ * Add Expense
  */
+exports.addExpense = async (tripId, expenseData, userId) => {
+  // calculate amount if not provided
+  const amount = expenseData.amount || expenseData.Payment * expenseData.rate;
 
-// Add a new expense to a specific trip
-exports.addExpense = async (tripId, data, addedBy) => {
-  // Calculate expense cost = Payment × rate
-  const totalCost = data.Payment * data.rate;
-
-  // Create expense record with calculated amount
-  const expense = await Expense.create({
-    ...data,
+  const expense = new Expense({
     tripId,
-    addedBy,
-    amount: totalCost, // ensure amount is always Payment × rate
+    Payment: expenseData.Payment,
+    rate: expenseData.rate,
+    amount,
+    reason: expenseData.reason,
+    addedBy: userId,
   });
 
-  // Find the trip
-  const trip = await Trip.findById(tripId);
-  if (!trip) throw new Error("Trip not found");
-
-  // Deduct expense from transport money
-  trip.transport = trip.transport - totalCost;
-
-  await trip.save();
-
+  await expense.save();
   return expense;
 };
 
-// Get all expenses for a specific trip
+/**
+ * Get Expenses by Trip
+ */
 exports.getExpensesByTrip = async (tripId) => {
-  return Expense.find({ tripId }).lean();
+  return Expense.find({ tripId })
+    .populate("addedBy", "name email")
+    .lean();
+};
+
+/**
+ * Get Expenses by Truck
+ * ---------------------------------
+ * Aggregates all expenses across trips for a given truck.
+ */
+exports.getExpensesByTruck = async (truckId) => {
+  // Step 1: Find all trips for this truck
+  const trips = await Trip.find({ truckId }).select("_id transport route startTime endTime status").lean();
+  const tripIds = trips.map(t => t._id);
+
+  // Step 2: Find all expenses linked to those trips
+  const expenses = await Expense.find({ tripId: { $in: tripIds } })
+    .populate("tripId", "route startTime endTime status transport")
+    .populate("addedBy", "name email")
+    .lean();
+
+  // Step 3: Calculate totals
+  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const totalTransport = trips.reduce((sum, trip) => sum + trip.transport, 0);
+  const profit = totalTransport - totalExpenses;
+
+  return {
+    truckId,
+    trips: trips.length,
+    totalTransport,
+    totalExpenses,
+    profit,
+    expenses,
+  };
 };
