@@ -25,8 +25,10 @@ router.get("/:id/report/yearly", authenticate, TripController.getTruckYearlyRepo
 // --------------------
 // Expense routes
 // --------------------
-router.post("/:tripId/expenses", authenticate, ExpenseController.addExpense);        // Add expense to trip
-router.get("/:tripId/expenses", authenticate, ExpenseController.getExpensesByTrip);  // Get expenses for trip
+router.post("/:tripId/expenses", authenticate, ExpenseController.addExpense);
+router.get("/:tripId/expenses", authenticate, ExpenseController.getExpensesByTrip);
+router.delete("/expenses/:id", authenticate, ExpenseController.deleteExpense);
+
 
 // --------------------
 // Truck expenses report route

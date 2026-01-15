@@ -46,6 +46,20 @@ exports.getExpensesByTruck = async (truckId) => {
     .populate("addedBy", "name email")
     .lean();
 
+
+// deleting expenses
+    exports.deleteExpense = async (expenseId) => {
+      const expense = await Expense.findById(expenseId);
+    
+      if (!expense) {
+        throw new Error("Expense not found");
+      }
+    
+      await expense.deleteOne();
+      return expense;
+    };
+    
+
   // Step 3: Calculate totals
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const totalTransport = trips.reduce((sum, trip) => sum + trip.transport, 0);

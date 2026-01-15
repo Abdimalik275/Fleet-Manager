@@ -11,6 +11,7 @@ const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const truckRoutes = require("./routes/truck.routes");
 const tripRoutes = require("./routes/trip.routes");
+// const  passwordRoutes = require("./routes/password.routes");
 
 
 const app = express();
@@ -66,6 +67,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/trucks", truckRoutes);
 app.use("/api/trips", tripRoutes);
+// app.use("/api/password", passwordRoutes);
+
 
 /* =======================
    HEALTH & ROOT

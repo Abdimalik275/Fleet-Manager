@@ -65,3 +65,21 @@ exports.getExpensesByTruck = async (req, res) => {
     res.status(400).json({ success: false, message: err.message });
   }
 };
+
+// Delete Expenses 
+exports.deleteExpense = async (req, res) => {
+  try {
+    const deletedExpense = await ExpenseService.deleteExpense(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Expense deleted successfully",
+      data: deletedExpense,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
