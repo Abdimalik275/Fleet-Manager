@@ -1,12 +1,16 @@
+// services/expense.service.js
+
 const Trip = require("../models/Trip");
 const Expense = require("../models/Expense");
 
 /**
- * Add Expense
+ * ======================================================
+ * ADD EXPENSE
+ * ======================================================
  */
 exports.addExpense = async (tripId, expenseData, userId) => {
-  // calculate amount if not provided
-  const amount = expenseData.amount || expenseData.Payment * expenseData.rate;
+  const amount =
+    expenseData.amount || expenseData.Payment * expenseData.rate;
 
   const expense = new Expense({
     tripId,
@@ -22,7 +26,9 @@ exports.addExpense = async (tripId, expenseData, userId) => {
 };
 
 /**
- * Get Expenses by Trip
+ * ======================================================
+ * GET EXPENSES BY TRIP
+ * ======================================================
  */
 exports.getExpensesByTrip = async (tripId) => {
   return Expense.find({ tripId })
@@ -31,38 +37,52 @@ exports.getExpensesByTrip = async (tripId) => {
 };
 
 /**
- * Get Expenses by Truck
- * ---------------------------------
- * Aggregates all expenses across trips for a given truck.
+ * ======================================================
+ * DELETE EXPENSE
+ * ======================================================
+ */
+exports.deleteExpense = async (expenseId) => {
+  const expense = await Expense.findById(expenseId);
+
+  if (!expense) {
+    throw new Error("Expense not found");
+  }
+
+  await expense.deleteOne();
+  return expense;
+};
+
+/**
+ * ======================================================
+ * GET EXPENSES BY TRUCK
+ * ======================================================
+ * Aggregates all expenses across trips for a given truck
  */
 exports.getExpensesByTruck = async (truckId) => {
-  // Step 1: Find all trips for this truck
-  const trips = await Trip.find({ truckId }).select("_id transport route startTime endTime status").lean();
-  const tripIds = trips.map(t => t._id);
+  // 1. Find all trips for this truck
+  const trips = await Trip.find({ truckId })
+    .select("_id transport route startTime endTime status")
+    .lean();
 
-  // Step 2: Find all expenses linked to those trips
+  const tripIds = trips.map((t) => t._id);
+
+  // 2. Find all expenses for those trips
   const expenses = await Expense.find({ tripId: { $in: tripIds } })
     .populate("tripId", "route startTime endTime status transport")
     .populate("addedBy", "name email")
     .lean();
 
+  // 3. Calculate totals
+  const totalExpenses = expenses.reduce(
+    (sum, exp) => sum + exp.amount,
+    0
+  );
 
-// deleting expenses
-    exports.deleteExpense = async (expenseId) => {
-      const expense = await Expense.findById(expenseId);
-    
-      if (!expense) {
-        throw new Error("Expense not found");
-      }
-    
-      await expense.deleteOne();
-      return expense;
-    };
-    
+  const totalTransport = trips.reduce(
+    (sum, trip) => sum + trip.transport,
+    0
+  );
 
-  // Step 3: Calculate totals
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const totalTransport = trips.reduce((sum, trip) => sum + trip.transport, 0);
   const profit = totalTransport - totalExpenses;
 
   return {
